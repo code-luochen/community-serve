@@ -2,6 +2,7 @@
 import { Controller, Post, Body, UseGuards, Get, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -16,18 +17,19 @@ export class AuthController {
     @Post('login')
     @ApiOperation({ summary: 'User login' })
     async login(@Body() loginDto: LoginDto) {
-        const user = await this.authService.validateUser(loginDto.username, loginDto.password);
+        const user = await this.authService.validateUser(loginDto.username, loginDto.password, loginDto.role);
         if (!user) {
-            throw new Error('Invalid credentials'); // Or use UnauthorizedException properly in service/filter
+            throw new Error('Invalid credentials');
         }
-        return this.authService.login(user);
+        return this.authService.login(user); // returns token + user info
     }
 
-    @Public()
-    @Post('register')
-    @ApiOperation({ summary: 'User registration' })
-    async register(@Body() createUserDto: LoginDto) { // Reusing LoginDto for simplicity, ideally CreateUserDto
-        return this.authService.register(createUserDto);
+    @Post('change-password')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Change password' })
+    async changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto) {
+        return this.authService.changePassword(user.userId, dto.oldPassword, dto.newPassword);
     }
 
     @Get('profile')
