@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -19,7 +20,10 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get<string>('DATABASE_HOST') ?? '127.0.0.1',
-        port: parseInt(configService.get<string>('DATABASE_PORT') ?? '3306', 10),
+        port: parseInt(
+          configService.get<string>('DATABASE_PORT') ?? '3306',
+          10,
+        ),
         username: configService.get<string>('DATABASE_USERNAME') ?? 'root',
         password: configService.get<string>('DATABASE_PASSWORD') ?? '',
         database: configService.get<string>('DATABASE_NAME') ?? 'community',
@@ -31,6 +35,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     }),
     AuthModule,
     UsersModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [
@@ -41,5 +46,4 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
     },
   ],
 })
-export class AppModule {
-}
+export class AppModule {}
