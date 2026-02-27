@@ -5,7 +5,9 @@ import {
   UseGuards,
   Get,
   Request,
+  UnauthorizedException,
 } from '@nestjs/common';
+
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -17,7 +19,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Public()
   @Post('login')
@@ -29,10 +31,11 @@ export class AuthController {
       loginDto.role,
     );
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
     return this.authService.login(user); // returns token + user info
   }
+
 
   @Post('change-password')
   @UseGuards(JwtAuthGuard)
