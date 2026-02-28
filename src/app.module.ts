@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { OrderModule } from './modules/order/order.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ElderlyProfileModule } from './modules/elderly-profile/elderly-profile.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { join } from 'path';
     AuthModule,
     UsersModule,
     OrderModule,
+    ElderlyProfileModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',

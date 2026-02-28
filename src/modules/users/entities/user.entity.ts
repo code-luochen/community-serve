@@ -4,7 +4,9 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
+import { ElderlyProfile } from '../../elderly-profile/entities/elderly-profile.entity';
 
 @Entity('users')
 export class User {
@@ -57,4 +59,7 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @OneToOne(() => ElderlyProfile, profile => profile.user)
+  profile: ElderlyProfile;
 }
