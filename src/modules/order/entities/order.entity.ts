@@ -47,7 +47,7 @@ export class Order {
 
   @Column({ type: 'tinyint', default: 0 })
   @ApiProperty({
-    description: '状态：0-待接单 1-已接单 2-配送中 3-已完成 4-已取消',
+    description: '状态：0-待接单 1-已接单 2-配送中 3-待评价 4-已完成 5-已取消',
     default: 0,
   })
   status: number;

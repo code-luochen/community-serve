@@ -99,7 +99,7 @@ export class OrderService {
     const order = await this.findOne(id);
 
     // 基础流转拦截（可选更严格的流转校验）
-    if (order.status === 3 || order.status === 4) {
+    if (order.status === 4 || order.status === 5) {
       throw new BadRequestException(
         'Order is already completed or canceled, cannot change status',
       );
@@ -115,7 +115,7 @@ export class OrderService {
 
     if (order.status !== 3) {
       throw new BadRequestException(
-        'Only completed orders (status = 3) can be evaluated',
+        'Only orders pending evaluation (status = 3) can be evaluated',
       );
     }
     if (order.evaluation) {
@@ -125,6 +125,7 @@ export class OrderService {
     this.orderRepository.merge(order, {
       evaluation: evaluateDto.evaluation,
       evaluationContent: evaluateDto.evaluationContent,
+      status: 4, // 评价完成后状态流转为已完成
     });
 
     return await this.orderRepository.save(order);

@@ -13,7 +13,7 @@ export class QueryOrderDto {
   @IsString()
   merchantId?: string;
 
-  @ApiPropertyOptional({ description: '订单状态 (0-4)' })
+  @ApiPropertyOptional({ description: '订单状态 (0-5)' })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
