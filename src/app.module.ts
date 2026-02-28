@@ -11,6 +11,7 @@ import { OrderModule } from './modules/order/order.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ElderlyProfileModule } from './modules/elderly-profile/elderly-profile.module';
+import { ServicesModule } from './modules/services/services.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ElderlyProfileModule } from './modules/elderly-profile/elderly-profile.
     UsersModule,
     OrderModule,
     ElderlyProfileModule,
+    ServicesModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
