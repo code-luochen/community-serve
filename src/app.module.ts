@@ -8,6 +8,8 @@ import { UsersModule } from './modules/users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { OrderModule } from './modules/order/order.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -36,6 +38,10 @@ import { OrderModule } from './modules/order/order.module';
     AuthModule,
     UsersModule,
     OrderModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'uploads'),
+      serveRoot: '/uploads',
+    }),
   ],
   controllers: [AppController],
   providers: [
@@ -46,4 +52,4 @@ import { OrderModule } from './modules/order/order.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

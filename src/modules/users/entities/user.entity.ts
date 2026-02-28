@@ -46,6 +46,12 @@ export class User {
   })
   lastLoginAt: Date;
 
+  @Column({
+    nullable: true,
+    comment: '头像URL',
+  })
+  avatar: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

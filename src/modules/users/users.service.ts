@@ -8,13 +8,14 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UserQueryDto } from './dto/user-query.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async findOne(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
@@ -35,7 +36,39 @@ export class UsersService {
   }
 
   async findById(id: number): Promise<User | null> {
-    return this.usersRepository.findOneBy({ id });
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async findAll(query: UserQueryDto) {
+    const { page = 1, limit = 10, username, role } = query;
+    const queryBuilder = this.usersRepository.createQueryBuilder('user');
+
+    if (username) {
+      queryBuilder.andWhere('user.username LIKE :username', {
+        username: `%${username}%`,
+      });
+    }
+
+    if (role) {
+      queryBuilder.andWhere('user.role = :role', { role });
+    }
+
+    const [items, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('user.createdAt', 'DESC')
+      .getManyAndCount();
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
