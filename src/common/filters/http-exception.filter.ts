@@ -19,6 +19,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
+    if (!(exception instanceof HttpException)) {
+      console.error('INTERNAL ERROR:', exception);
+      require('fs').appendFileSync(
+        '/tmp/backend-error.log',
+        '\n[' + new Date().toISOString() + '] INTERNAL ERROR:\n' +
+        (exception instanceof Error ? exception.stack : String(exception)) +
+        '\n'
+      );
+    }
     const message =
       exception instanceof HttpException
         ? exception.getResponse()

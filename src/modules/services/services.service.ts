@@ -16,7 +16,7 @@ export class ServicesService {
   constructor(
     @InjectRepository(Service)
     private readonly servicesRepository: Repository<Service>,
-  ) {}
+  ) { }
 
   async create(
     merchantId: number,
@@ -24,7 +24,8 @@ export class ServicesService {
   ): Promise<Service> {
     const service: Service = this.servicesRepository.create({
       ...createServiceDto,
-      merchantId,
+      merchantId: Number(merchantId),
+      merchant: { id: Number(merchantId) } as any,
       status: 0,
       auditStatus: 0,
     });
