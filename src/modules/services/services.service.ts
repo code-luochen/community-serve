@@ -36,7 +36,7 @@ export class ServicesService {
     query: ServiceQueryDto,
     customFilters: FindOptionsWhere<Service> = {},
   ): Promise<{ total: number; items: Service[] }> {
-    const { page = 1, limit = 10, name, type } = query;
+    const { page = 1, limit = 10, name, type, status, auditStatus } = query;
     const skip: number = (page - 1) * limit;
 
     const where: FindOptionsWhere<Service> = { ...customFilters };
@@ -45,6 +45,12 @@ export class ServicesService {
     }
     if (type) {
       where.type = type;
+    }
+    if (status !== undefined && customFilters.status === undefined) {
+      where.status = status;
+    }
+    if (auditStatus !== undefined && customFilters.auditStatus === undefined) {
+      where.auditStatus = auditStatus;
     }
 
     const [items, total] = await this.servicesRepository.findAndCount({

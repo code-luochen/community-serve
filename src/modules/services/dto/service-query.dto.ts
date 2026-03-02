@@ -27,4 +27,16 @@ export class ServiceQueryDto {
   @Type(() => Number)
   @IsInt()
   type?: number;
+
+  @ApiPropertyOptional({ description: '状态过滤：0-下架 1-上架' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  status?: number;
+
+  @ApiPropertyOptional({ description: '审核状态：0-待审核 1-通过 2-拒绝' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  auditStatus?: number;
 }
