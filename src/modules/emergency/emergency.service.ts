@@ -5,6 +5,8 @@ import { EmergencyLog } from './entities/emergency-log.entity';
 import { CreateEmergencyDto } from './dto/create-emergency.dto';
 import { UpdateEmergencyDto } from './dto/update-emergency.dto';
 import { QueryEmergencyDto } from './dto/query-emergency.dto';
+import { NotificationService } from '../notification/notification.service';
+import { UsersService } from '../users/users.service';
 
 export interface EmergencyLogListResult {
     items: EmergencyLog[];
@@ -18,6 +20,8 @@ export class EmergencyService {
     constructor(
         @InjectRepository(EmergencyLog)
         private readonly emergencyLogRepository: Repository<EmergencyLog>,
+        private readonly notificationService: NotificationService,
+        private readonly usersService: UsersService,
     ) { }
 
     // BE-16: 求助触发与记录
@@ -29,7 +33,36 @@ export class EmergencyService {
             status: 0, // 初始为待处理
         });
 
-        return await this.emergencyLogRepository.save(record);
+        const savedRecord = await this.emergencyLogRepository.save(record);
+
+        const title = '紧急求助通知';
+        const content = `收到一项新的紧急求助（位置：${savedRecord.location || '未知'}），请尽快查收处理！`;
+
+        // Notify family members
+        const familyMembers = await this.usersService.getFamilyMembersByElderlyId(elderlyId);
+        for (const family of familyMembers) {
+            await this.notificationService.create({
+                userId: Number(family.id),
+                type: 'emergency',
+                title,
+                content,
+                relatedId: Number(savedRecord.id),
+            });
+        }
+
+        // Notify admins
+        const admins = await this.usersService.getAdmins();
+        for (const admin of admins) {
+            await this.notificationService.create({
+                userId: Number(admin.id),
+                type: 'emergency',
+                title,
+                content,
+                relatedId: Number(savedRecord.id),
+            });
+        }
+
+        return savedRecord;
     }
 
     // BE-17: 求助处理 (由管理员或家属确认处理并记录)

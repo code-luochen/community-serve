@@ -111,4 +111,17 @@ export class UsersService {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     await this.usersRepository.update(id, { password: hashedPassword });
   }
+
+  async getFamilyMembersByElderlyId(elderlyId: number): Promise<User[]> {
+    const elderly = await this.findById(elderlyId);
+    if (!elderly) return [];
+    return this.usersRepository.createQueryBuilder('user')
+      .where('user.role = :role', { role: 2 })
+      .andWhere('user.username LIKE :pattern', { pattern: `family\\_${elderly.username}\\_%` })
+      .getMany();
+  }
+
+  async getAdmins(): Promise<User[]> {
+    return this.usersRepository.find({ where: { role: 4 } });
+  }
 }

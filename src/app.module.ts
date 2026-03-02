@@ -14,6 +14,7 @@ import { ElderlyProfileModule } from './modules/elderly-profile/elderly-profile.
 import { ServicesModule } from './modules/services/services.module';
 import { HealthRecordModule } from './modules/health-record/health-record.module';
 import { EmergencyModule } from './modules/emergency/emergency.module';
+import { NotificationModule } from './modules/notification/notification.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -49,6 +50,7 @@ import { EmergencyModule } from './modules/emergency/emergency.module';
     }),
     HealthRecordModule,
     EmergencyModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

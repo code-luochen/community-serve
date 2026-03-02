@@ -10,6 +10,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { EvaluateOrderDto } from './dto/evaluate-order.dto';
 import { QueryOrderDto } from './dto/query-order.dto';
+import { NotificationService } from '../notification/notification.service';
+import { UsersService } from '../users/users.service';
 
 export interface OrderListResult {
   items: Order[];
@@ -23,7 +25,9 @@ export class OrderService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
-  ) {}
+    private readonly notificationService: NotificationService,
+    private readonly usersService: UsersService,
+  ) { }
 
   /**
    * 生成业务订单号：SN + yyyyMMddHHmmssSSS + 3位随机数
@@ -106,7 +110,43 @@ export class OrderService {
     }
 
     this.orderRepository.merge(order, { status: updateDto.status });
-    return await this.orderRepository.save(order);
+    const savedOrder = await this.orderRepository.save(order);
+
+    const statusMap = {
+      1: '已接单',
+      2: '配送中',
+      3: '已完成',
+      4: '已取消',
+    };
+
+    if (updateDto.status === 1 || updateDto.status === 2 || updateDto.status === 3) {
+      const statusText = statusMap[updateDto.status];
+      const title = `订单状态更新：${statusText}`;
+      const content = `您的订单（${order.orderNo}）服务状态已更新为：${statusText}`;
+
+      // Notify elderly
+      await this.notificationService.create({
+        userId: parseInt(order.elderlyId, 10),
+        type: 'order',
+        title,
+        content,
+        relatedId: parseInt(order.id, 10),
+      });
+
+      // Notify family
+      const familyMembers = await this.usersService.getFamilyMembersByElderlyId(parseInt(order.elderlyId, 10));
+      for (const family of familyMembers) {
+        await this.notificationService.create({
+          userId: family.id,
+          type: 'order',
+          title,
+          content,
+          relatedId: parseInt(order.id, 10),
+        });
+      }
+    }
+
+    return savedOrder;
   }
 
   // BE-12: 订单评价

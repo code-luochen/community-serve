@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { HealthRecord } from './entities/health-record.entity';
 import { CreateHealthRecordDto } from './dto/create-health-record.dto';
 import { QueryHealthRecordDto } from './dto/query-health-record.dto';
+import { NotificationService } from '../notification/notification.service';
+import { UsersService } from '../users/users.service';
 
 export interface HealthRecordListResult {
     items: HealthRecord[];
@@ -17,6 +19,8 @@ export class HealthRecordService {
     constructor(
         @InjectRepository(HealthRecord)
         private readonly healthRecordRepository: Repository<HealthRecord>,
+        private readonly notificationService: NotificationService,
+        private readonly usersService: UsersService,
     ) { }
 
     // BE-13 & BE-14: 健康数据录入 & 健康阈值预警
@@ -88,7 +92,38 @@ export class HealthRecordService {
             abnormalType,
         });
 
-        return await this.healthRecordRepository.save(record);
+        const savedRecord = await this.healthRecordRepository.save(record);
+
+        if (isAbnormal === 1) {
+            const title = '健康异常预警';
+            const content = `检测到老人（数据编号 ${savedRecord.id}）的健康数据异常，异常类型：${abnormalTypes.join(', ')}。请及时关注！`;
+
+            // Notify family members
+            const familyMembers = await this.usersService.getFamilyMembersByElderlyId(savedRecord.elderlyId);
+            for (const family of familyMembers) {
+                await this.notificationService.create({
+                    userId: family.id,
+                    type: 'health',
+                    title,
+                    content,
+                    relatedId: Number(savedRecord.id),
+                });
+            }
+
+            // Notify admins
+            const admins = await this.usersService.getAdmins();
+            for (const admin of admins) {
+                await this.notificationService.create({
+                    userId: Number(admin.id),
+                    type: 'health',
+                    title,
+                    content,
+                    relatedId: Number(savedRecord.id),
+                });
+            }
+        }
+
+        return savedRecord;
     }
 
     // BE-15: 健康数据查询
