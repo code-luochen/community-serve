@@ -19,7 +19,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @Public()
   @Post('login')
@@ -35,7 +35,6 @@ export class AuthController {
     }
     return this.authService.login(user); // returns token + user info
   }
-
 
   @Post('change-password')
   @UseGuards(JwtAuthGuard)

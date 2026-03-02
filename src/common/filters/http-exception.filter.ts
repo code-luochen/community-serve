@@ -23,9 +23,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       console.error('INTERNAL ERROR:', exception);
       require('fs').appendFileSync(
         '/tmp/backend-error.log',
-        '\n[' + new Date().toISOString() + '] INTERNAL ERROR:\n' +
-        (exception instanceof Error ? exception.stack : String(exception)) +
-        '\n'
+        '\n[' +
+          new Date().toISOString() +
+          '] INTERNAL ERROR:\n' +
+          (exception instanceof Error ? exception.stack : String(exception)) +
+          '\n',
       );
     }
     const message =

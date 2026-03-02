@@ -16,7 +16,7 @@ export class ServicesService {
   constructor(
     @InjectRepository(Service)
     private readonly servicesRepository: Repository<Service>,
-  ) { }
+  ) {}
 
   async create(
     merchantId: number,

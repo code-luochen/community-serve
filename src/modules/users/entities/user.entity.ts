@@ -60,6 +60,6 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToOne(() => ElderlyProfile, profile => profile.user)
+  @OneToOne(() => ElderlyProfile, (profile) => profile.user)
   profile: ElderlyProfile;
 }

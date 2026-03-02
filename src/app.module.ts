@@ -12,6 +12,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ElderlyProfileModule } from './modules/elderly-profile/elderly-profile.module';
 import { ServicesModule } from './modules/services/services.module';
+import { HealthRecordModule } from './modules/health-record/health-record.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ServicesModule } from './modules/services/services.module';
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
+    HealthRecordModule,
   ],
   controllers: [AppController],
   providers: [
@@ -56,4 +58,4 @@ import { ServicesModule } from './modules/services/services.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}
