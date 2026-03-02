@@ -13,7 +13,7 @@ import { join } from 'path';
 import { ElderlyProfileModule } from './modules/elderly-profile/elderly-profile.module';
 import { ServicesModule } from './modules/services/services.module';
 import { HealthRecordModule } from './modules/health-record/health-record.module';
-
+import { EmergencyModule } from './modules/emergency/emergency.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +48,7 @@ import { HealthRecordModule } from './modules/health-record/health-record.module
       serveRoot: '/uploads',
     }),
     HealthRecordModule,
+    EmergencyModule,
   ],
   controllers: [AppController],
   providers: [
@@ -58,4 +59,4 @@ import { HealthRecordModule } from './modules/health-record/health-record.module
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
