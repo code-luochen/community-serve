@@ -37,7 +37,7 @@ import { User } from './entities/user.entity';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(private usersService: UsersService) { }
 
   @Post()
   @Roles(UserRole.ADMIN)
@@ -83,10 +83,10 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'List all users (Admin only)' })
-  findAll(@Query() query: UserQueryDto) {
-    return this.usersService.findAll(query);
+  @Roles(UserRole.ADMIN, UserRole.FAMILY)
+  @ApiOperation({ summary: 'List users (Admin, or Family querying elderly)' })
+  findAll(@Query() query: UserQueryDto, @CurrentUser() user: any) {
+    return this.usersService.findAll(query, user.role);
   }
 
   @Get(':id')

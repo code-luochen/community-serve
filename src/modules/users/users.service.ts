@@ -15,7 +15,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async findOne(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
@@ -43,7 +43,7 @@ export class UsersService {
     return user;
   }
 
-  async findAll(query: UserQueryDto) {
+  async findAll(query: UserQueryDto, currentUserRole?: number) {
     const { page = 1, limit = 10, username, role } = query;
     const queryBuilder = this.usersRepository.createQueryBuilder('user');
 
@@ -53,7 +53,10 @@ export class UsersService {
       });
     }
 
-    if (role) {
+    // Force role filter if requested by FAMILY user
+    if (currentUserRole === 2) {
+      queryBuilder.andWhere('user.role = :strictRole', { strictRole: 1 });
+    } else if (role) {
       queryBuilder.andWhere('user.role = :role', { role });
     }
 
