@@ -15,6 +15,8 @@ import { ServicesModule } from './modules/services/services.module';
 import { HealthRecordModule } from './modules/health-record/health-record.module';
 import { EmergencyModule } from './modules/emergency/emergency.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { StatisticsModule } from './modules/statistics/statistics.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -51,6 +53,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     HealthRecordModule,
     EmergencyModule,
     NotificationModule,
+    StatisticsModule,
   ],
   controllers: [AppController],
   providers: [

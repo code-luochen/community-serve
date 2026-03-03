@@ -1,5 +1,5 @@
 // Trigger TS Server refresh
-import { Controller, Get, Post, Body, Param, Patch, Query, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Query, Req } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -30,13 +30,13 @@ export class NotificationController {
         return this.notificationService.findUnreadCount(req.user.userId);
     }
 
-    @Patch(':id/read')
+    @Put(':id/read')
     @ApiOperation({ summary: 'Mark a notification as read' })
     markAsRead(@Param('id') id: string, @Req() req: any) {
         return this.notificationService.markAsRead(+id, req.user.userId);
     }
 
-    @Patch('read-all')
+    @Put('read-all')
     @ApiOperation({ summary: 'Mark all notifications as read for current user' })
     markAllAsRead(@Req() req: any) {
         return this.notificationService.markAllAsRead(req.user.userId);
