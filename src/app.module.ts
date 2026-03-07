@@ -17,6 +17,7 @@ import { EmergencyModule } from './modules/emergency/emergency.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { FamilyBindingModule } from './modules/family-binding/family-binding.module';
+import { CommunityModule } from './modules/community/community.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { FamilyBindingModule } from './modules/family-binding/family-binding.mod
     NotificationModule,
     StatisticsModule,
     FamilyBindingModule,
+    CommunityModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,5 +1,6 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsInt } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class UpdateUserDto {
   @ApiProperty({ required: false })
@@ -17,4 +18,16 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   avatar?: string;
+
+  @ApiProperty({ required: false })
+  @IsInt()
+  @Type(() => Number)
+  @IsOptional()
+  communityId?: number;
+
+  @ApiProperty({ required: false })
+  @IsInt()
+  @Type(() => Number)
+  @IsOptional()
+  houseId?: number;
 }

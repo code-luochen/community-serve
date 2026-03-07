@@ -23,16 +23,19 @@ export class StatisticsService {
     private readonly bindingRepository: Repository<FamilyBinding>,
   ) {}
 
-  async getDashboardData() {
+  async getDashboardData(communityId?: number) {
+    // Build community filter for user queries
+    const communityFilter = communityId ? { communityId } : {};
+
     // 1. 用户统计
     const elderlyCount = await this.userRepository.count({
-      where: { role: 1 },
+      where: { role: 1, ...communityFilter },
     });
     const familyCount = await this.userRepository.count({
-      where: { role: 2 },
+      where: { role: 2, ...communityFilter },
     });
     const merchantCount = await this.userRepository.count({
-      where: { role: 3 },
+      where: { role: 3, ...communityFilter },
     });
 
     // 2. 订单统计
@@ -52,41 +55,97 @@ export class StatisticsService {
     // 本月一日零点
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const dailyOrders = await this.orderRepository.count({
-      where: { createdAt: MoreThanOrEqual(todayStart) },
-    });
-    const weeklyOrders = await this.orderRepository.count({
-      where: { createdAt: MoreThanOrEqual(weekStart) },
-    });
-    const monthlyOrders = await this.orderRepository.count({
-      where: { createdAt: MoreThanOrEqual(monthStart) },
-    });
 
-    // 状态统计 (根据文档: 待处理等)
-    const pendingOrders = await this.orderRepository.count({
-      where: { status: 0 },
-    }); // 0-待接单
-    const completedOrders = await this.orderRepository.count({
-      where: { status: 4 },
-    }); // 4-已完成 (根据order entity)
 
-    const totalOrders = await this.orderRepository.count();
+    // If filtering by community, get elderly IDs in that community first
+    let elderlyIdsInCommunity: string[] | undefined;
+    if (communityId) {
+      const elderlyUsers = await this.userRepository.find({
+        where: { role: 1, communityId },
+        select: ['id'],
+      });
+      elderlyIdsInCommunity = elderlyUsers.map((u) => u.id.toString());
+    }
 
     // 3. 健康预警统计
-    const healthWarnings = await this.healthRecordRepository.count({
-      where: { isAbnormal: 1 },
-    });
+    let healthWarnings: number;
+    if (elderlyIdsInCommunity !== undefined) {
+      if (elderlyIdsInCommunity.length === 0) {
+        healthWarnings = 0;
+      } else {
+        healthWarnings = await this.healthRecordRepository
+          .createQueryBuilder('hr')
+          .where('hr.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity })
+          .andWhere('hr.is_abnormal = :ab', { ab: 1 })
+          .getCount();
+      }
+    } else {
+      healthWarnings = await this.healthRecordRepository.count({
+        where: { isAbnormal: 1 },
+      });
+    }
 
     // 4. 服务类型分布统计 (1-生活服务 2-药品服务 3-医护服务)
-    const lifeServices = await this.serviceRepository.count({
-      where: { type: 1 },
-    });
-    const medicineServices = await this.serviceRepository.count({
-      where: { type: 2 },
-    });
-    const medicalServices = await this.serviceRepository.count({
-      where: { type: 3 },
-    });
+    // For community filter, filter by merchant communityId
+    const merchantFilter = communityId
+      ? await this.userRepository
+          .find({ where: { role: 3, communityId }, select: ['id'] })
+          .then((ms) => ms.map((m) => m.id))
+      : undefined;
+
+    const buildServiceFilter = (type: number) =>
+      merchantFilter && merchantFilter.length > 0
+        ? this.serviceRepository
+            .createQueryBuilder('s')
+            .where('s.type = :type', { type })
+            .andWhere('s.merchant_id IN (:...ids)', { ids: merchantFilter })
+            .getCount()
+        : merchantFilter && merchantFilter.length === 0
+          ? Promise.resolve(0)
+          : this.serviceRepository.count({ where: { type } });
+
+    const [lifeServices, medicineServices, medicalServices] = await Promise.all([
+      buildServiceFilter(1),
+      buildServiceFilter(2),
+      buildServiceFilter(3),
+    ]);
+
+    // Order stats - filter by elderly in community
+    const buildOrderCount = (where: object) => {
+      if (elderlyIdsInCommunity !== undefined) {
+        if (elderlyIdsInCommunity.length === 0) return Promise.resolve(0);
+        return this.orderRepository
+          .createQueryBuilder('o')
+          .where('o.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity })
+          .andWhere(where)
+          .getCount();
+      }
+      return this.orderRepository.count({ where });
+    };
+
+    const dailyOrders = elderlyIdsInCommunity !== undefined
+      ? (elderlyIdsInCommunity.length === 0 ? 0 : await this.orderRepository.createQueryBuilder('o').where('o.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity }).andWhere('o.created_at >= :d', { d: todayStart }).getCount())
+      : await this.orderRepository.count({ where: { createdAt: MoreThanOrEqual(todayStart) } });
+
+    const weeklyOrders = elderlyIdsInCommunity !== undefined
+      ? (elderlyIdsInCommunity.length === 0 ? 0 : await this.orderRepository.createQueryBuilder('o').where('o.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity }).andWhere('o.created_at >= :d', { d: weekStart }).getCount())
+      : await this.orderRepository.count({ where: { createdAt: MoreThanOrEqual(weekStart) } });
+
+    const monthlyOrders = elderlyIdsInCommunity !== undefined
+      ? (elderlyIdsInCommunity.length === 0 ? 0 : await this.orderRepository.createQueryBuilder('o').where('o.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity }).andWhere('o.created_at >= :d', { d: monthStart }).getCount())
+      : await this.orderRepository.count({ where: { createdAt: MoreThanOrEqual(monthStart) } });
+
+    const pendingOrders = elderlyIdsInCommunity !== undefined
+      ? (elderlyIdsInCommunity.length === 0 ? 0 : await this.orderRepository.createQueryBuilder('o').where('o.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity }).andWhere('o.status = 0').getCount())
+      : await this.orderRepository.count({ where: { status: 0 } });
+
+    const completedOrders = elderlyIdsInCommunity !== undefined
+      ? (elderlyIdsInCommunity.length === 0 ? 0 : await this.orderRepository.createQueryBuilder('o').where('o.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity }).andWhere('o.status = 4').getCount())
+      : await this.orderRepository.count({ where: { status: 4 } });
+
+    const totalOrders = elderlyIdsInCommunity !== undefined
+      ? (elderlyIdsInCommunity.length === 0 ? 0 : await this.orderRepository.createQueryBuilder('o').where('o.elderly_id IN (:...ids)', { ids: elderlyIdsInCommunity }).getCount())
+      : await this.orderRepository.count();
 
     // 组装返回数据标准格式建议与前端图表匹配
     return {

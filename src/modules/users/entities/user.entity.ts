@@ -54,6 +54,22 @@ export class User {
   })
   avatar: string;
 
+  @Column({
+    name: 'community_id',
+    type: 'bigint',
+    nullable: true,
+    comment: '所属小区ID（用于数据隔离）',
+  })
+  communityId: number | null;
+
+  @Column({
+    name: 'house_id',
+    type: 'bigint',
+    nullable: true,
+    comment: '关联 house_dict.id，精确位置',
+  })
+  houseId: number | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

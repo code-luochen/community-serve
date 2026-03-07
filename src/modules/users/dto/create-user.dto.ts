@@ -6,9 +6,11 @@ import {
   Matches,
   Length,
   IsOptional,
+  IsInt,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '../../auth/dto/login.dto';
+import { Type } from 'class-transformer';
 
 export class CreateUserDto {
   @ApiProperty()
@@ -37,8 +39,26 @@ export class CreateUserDto {
   @IsNotEmpty()
   nickname: string;
 
-  @ApiProperty({ required: false })
+  @ApiPropertyOptional({ description: '真实姓名' })
   @IsString()
   @IsOptional()
   realName?: string;
+
+  @ApiPropertyOptional({
+    description: '所属小区ID（关联 community.id），用于数据隔离',
+    example: 1,
+  })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  communityId?: number;
+
+  @ApiPropertyOptional({
+    description: '关联 house_dict.id，精确楼栋/单元/门牌',
+    example: 101,
+  })
+  @Type(() => Number)
+  @IsInt()
+  @IsOptional()
+  houseId?: number;
 }

@@ -26,11 +26,14 @@ export class CreateElderlyProfileDto {
   @Max(2)
   gender?: number;
 
-  @ApiPropertyOptional({ description: '详细住址', example: '张阳小区A栋302' })
+  @ApiPropertyOptional({
+    description: '房屋ID（关联 house_dict.id），替代原 address 字段',
+    example: 1,
+  })
   @IsOptional()
-  @IsString()
-  @MaxLength(200)
-  address?: string;
+  @Type(() => Number)
+  @IsInt()
+  houseId?: number;
 
   @ApiPropertyOptional({ description: '紧急联系人姓名', example: '张三' })
   @IsOptional()

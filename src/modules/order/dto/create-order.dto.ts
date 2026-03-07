@@ -4,8 +4,10 @@ import {
   IsOptional,
   IsDateString,
   IsObject,
+  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class CreateOrderDto {
   @ApiProperty({ description: '老年人 user_id', type: String })
@@ -33,10 +35,15 @@ export class CreateOrderDto {
   @IsNotEmpty()
   serviceTime: string;
 
-  @ApiProperty({ description: '服务地址' })
-  @IsString()
-  @IsNotEmpty()
-  address: string;
+  @ApiPropertyOptional({
+    description:
+      'house_dict.id，系统自动从老人档案读取；传入则优先使用（适用于临时修改地址）',
+    type: Number,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  houseId?: number;
 
   @ApiPropertyOptional({ description: '备注' })
   @IsString()

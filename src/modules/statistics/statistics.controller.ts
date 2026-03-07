@@ -15,8 +15,11 @@ export class StatisticsController {
   @Get('dashboard')
   @Roles(4) // 4 = 管理员
   @ApiOperation({ summary: '获取管理员数据看板统计信息' })
-  async getDashboardData() {
-    return await this.statisticsService.getDashboardData();
+  async getDashboardData(
+    @Query('communityId') communityId?: string,
+  ) {
+    const parsedCommunityId = communityId ? parseInt(communityId, 10) : undefined;
+    return await this.statisticsService.getDashboardData(parsedCommunityId);
   }
 
   @Get('merchant')

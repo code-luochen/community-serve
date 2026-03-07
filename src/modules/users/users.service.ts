@@ -10,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
 import { FamilyBinding } from '../family-binding/entities/family-binding.entity';
+import { ElderlyProfile } from '../elderly-profile/entities/elderly-profile.entity';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +19,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(FamilyBinding)
     private bindingRepository: Repository<FamilyBinding>,
+    @InjectRepository(ElderlyProfile)
+    private profileRepository: Repository<ElderlyProfile>,
   ) {}
 
   async findOne(username: string): Promise<User | null> {
@@ -65,6 +68,9 @@ export class UsersService {
     }
 
     const [items, total] = await queryBuilder
+      .leftJoinAndSelect('user.profile', 'profile')
+      .leftJoinAndSelect('profile.house', 'house')
+      .leftJoinAndSelect('house.community', 'community')
       .skip((page - 1) * limit)
       .take(limit)
       .orderBy('user.createdAt', 'DESC')
@@ -94,15 +100,40 @@ export class UsersService {
       password: hashedPassword,
       status: 1, // Default active
     });
-    return this.usersRepository.save(user);
+    const savedUser = await this.usersRepository.save(user);
+
+    // If elderly, create profile
+    if (createUserDto.role === 1) {
+      await this.profileRepository.save({
+        userId: savedUser.id,
+        houseId: createUserDto.houseId,
+      });
+    }
+
+    return savedUser;
   }
 
-  async update(id: number, updateData: Partial<User>): Promise<User | null> {
+  async update(id: number, updateData: any): Promise<User | null> {
     if (updateData.password) {
       const salt = await bcrypt.genSalt();
       updateData.password = await bcrypt.hash(updateData.password, salt);
     }
+    
+    // Ensure numeric types for address fields if they exist
+    if (updateData.communityId) updateData.communityId = Number(updateData.communityId);
+    if (updateData.houseId) updateData.houseId = Number(updateData.houseId);
+
+    // Update user table
     await this.usersRepository.update(id, updateData);
+    
+    // Sync to profile if user is elderly
+    if (updateData.houseId) {
+      const user = await this.findById(id);
+      if (user && user.role === 1) {
+        await this.profileRepository.update({ userId: id }, { houseId: updateData.houseId });
+      }
+    }
+    
     return this.findById(id);
   }
 

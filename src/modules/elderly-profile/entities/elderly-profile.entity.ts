@@ -5,8 +5,10 @@ import {
   CreateDateColumn,
   OneToOne,
   JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { HouseDict } from '../../community/entities/house-dict.entity';
 
 @Entity('elderly_profile')
 export class ElderlyProfile {
@@ -26,8 +28,17 @@ export class ElderlyProfile {
   @Column({ type: 'tinyint', nullable: true, comment: '性别：1-男 2-女' })
   gender: number;
 
-  @Column({ type: 'varchar', length: 200, nullable: true, comment: '详细住址' })
-  address: string;
+  @Column({
+    name: 'house_id',
+    type: 'bigint',
+    nullable: true,
+    comment: '关联 house_dict.id，精确楼栋/单元/门牌',
+  })
+  houseId: number | null;
+
+  @ManyToOne(() => HouseDict, { nullable: true, eager: false })
+  @JoinColumn({ name: 'house_id' })
+  house: HouseDict;
 
   @Column({
     name: 'emergency_contact',

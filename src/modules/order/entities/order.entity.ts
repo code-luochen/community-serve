@@ -37,9 +37,9 @@ export class Order {
   @ApiProperty({ description: '预约服务时间' })
   serviceTime: Date;
 
-  @Column({ type: 'varchar', length: 200 })
-  @ApiProperty({ description: '服务地址' })
-  address: string;
+  @Column({ name: 'house_snapshot', type: 'varchar', length: 200, comment: '地址快照（楼栋-单元-门牌）' })
+  @ApiProperty({ description: '地址快照（如：阳光花园-A栋-1单元-402），下单时生成，防止字典变更影响历史订单' })
+  houseSnapshot: string;
 
   @Column({ type: 'varchar', length: 200, nullable: true })
   @ApiProperty({ description: '备注', required: false })

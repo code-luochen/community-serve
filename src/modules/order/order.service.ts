@@ -12,6 +12,8 @@ import { EvaluateOrderDto } from './dto/evaluate-order.dto';
 import { QueryOrderDto } from './dto/query-order.dto';
 import { NotificationService } from '../notification/notification.service';
 import { UsersService } from '../users/users.service';
+import { CommunityService } from '../community/community.service';
+import { ElderlyProfile } from '../elderly-profile/entities/elderly-profile.entity';
 
 export interface OrderListResult {
   items: Order[];
@@ -25,8 +27,11 @@ export class OrderService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @InjectRepository(ElderlyProfile)
+    private readonly elderlyProfileRepo: Repository<ElderlyProfile>,
     private readonly notificationService: NotificationService,
     private readonly usersService: UsersService,
+    private readonly communityService: CommunityService,
   ) {}
 
   /**
@@ -48,11 +53,35 @@ export class OrderService {
     return `SN${timestamp}${randomBits}`;
   }
 
-  // BE-09: 订单创建
+  // BE-09 + BE-21: 订单创建，自动读取老人档案地址生成快照
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
     const orderNo = this.generateOrderNo();
+
+    // BE-21: 自动读取老人 house_id，生成地址快照
+    let houseSnapshot = '地址未设置';
+
+    const elderlyIdNum = parseInt(createOrderDto.elderlyId, 10);
+    const profile = await this.elderlyProfileRepo.findOneBy({
+      userId: elderlyIdNum,
+    });
+
+    // 优先使用请求中传入的 houseId（临时修改），否则用档案中绑定的
+    const resolvedHouseId = createOrderDto.houseId ?? profile?.houseId ?? null;
+
+    if (resolvedHouseId) {
+      try {
+        houseSnapshot = await this.communityService.getHouseSnapshot(
+          resolvedHouseId,
+        );
+      } catch {
+        // house not found, keep default
+        houseSnapshot = `房屋#${resolvedHouseId}（地址信息异常）`;
+      }
+    }
+
     const order = this.orderRepository.create({
       ...createOrderDto,
+      houseSnapshot,
       orderNo,
       status: 0, // 初始化状态：0-待接单
     });
@@ -112,7 +141,7 @@ export class OrderService {
     this.orderRepository.merge(order, { status: updateDto.status });
     const savedOrder = await this.orderRepository.save(order);
 
-    const statusMap = {
+    const statusMap: Record<number, string> = {
       1: '已接单',
       2: '配送中',
       3: '已完成',
@@ -135,7 +164,6 @@ export class OrderService {
         title,
         content,
         relatedId: parseInt(order.id, 10),
-        elderlyId: parseInt(order.elderlyId, 10),
       });
 
       // Notify family
@@ -149,7 +177,6 @@ export class OrderService {
           title,
           content,
           relatedId: parseInt(order.id, 10),
-          elderlyId: parseInt(order.elderlyId, 10),
         });
       }
     }

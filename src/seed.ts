@@ -44,7 +44,7 @@ async function bootstrap() {
           await elderlyProfileService.createOrUpdateForUser(elderlyUser.id, {
             age: 72,
             gender: 1,
-            address: '幸福小区1栋201',
+            // houseId: 1, // 可在创建小区和房屋字典后再绑定
             emergencyContact: '王小明',
             emergencyPhone: '13900139000',
           });
@@ -130,7 +130,7 @@ async function bootstrap() {
                 serviceId: service.id,
                 serviceSnapshot: { name: service.name, price: service.price },
                 serviceTime: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
-                address: '幸福小区1栋201',
+                // houseId 未设定，自动从老人档案读取
                 remark: '请带上新的测血糖仪'
             });
             console.log('订单创建成功！ID:', order.id);
