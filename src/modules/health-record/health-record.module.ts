@@ -7,8 +7,12 @@ import { HealthRecordService } from './health-record.service';
 import { HealthRecord } from './entities/health-record.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([HealthRecord]), NotificationModule, UsersModule],
+  imports: [
+    TypeOrmModule.forFeature([HealthRecord]),
+    NotificationModule,
+    UsersModule,
+  ],
   controllers: [HealthRecordController],
   providers: [HealthRecordService],
 })
-export class HealthRecordModule { }
+export class HealthRecordModule {}

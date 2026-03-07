@@ -9,13 +9,16 @@ import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserQueryDto } from './dto/user-query.dto';
+import { FamilyBinding } from '../family-binding/entities/family-binding.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) { }
+    @InjectRepository(FamilyBinding)
+    private bindingRepository: Repository<FamilyBinding>,
+  ) {}
 
   async findOne(username: string): Promise<User | null> {
     return this.usersRepository.findOne({
@@ -29,6 +32,7 @@ export class UsersService {
         'nickname',
         'realName',
         'lastLoginAt',
+        'avatar',
         'createdAt',
         'updatedAt',
       ],
@@ -113,12 +117,11 @@ export class UsersService {
   }
 
   async getFamilyMembersByElderlyId(elderlyId: number): Promise<User[]> {
-    const elderly = await this.findById(elderlyId);
-    if (!elderly) return [];
-    return this.usersRepository.createQueryBuilder('user')
-      .where('user.role = :role', { role: 2 })
-      .andWhere('user.username LIKE :pattern', { pattern: `family\\_${elderly.username}\\_%` })
-      .getMany();
+    const bindings = await this.bindingRepository.find({
+      where: { elderlyId, status: 1 },
+      relations: ['family'],
+    });
+    return bindings.map((b) => b.family).filter((f) => f != null);
   }
 
   async getAdmins(): Promise<User[]> {

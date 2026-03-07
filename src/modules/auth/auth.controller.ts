@@ -30,10 +30,7 @@ export class AuthController {
       loginDto.password,
       loginDto.role,
     );
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    return this.authService.login(user); // returns token + user info
+    return this.authService.login(user);
   }
 
   @Post('change-password')

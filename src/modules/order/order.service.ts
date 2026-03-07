@@ -27,7 +27,7 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     private readonly notificationService: NotificationService,
     private readonly usersService: UsersService,
-  ) { }
+  ) {}
 
   /**
    * 生成业务订单号：SN + yyyyMMddHHmmssSSS + 3位随机数
@@ -119,7 +119,11 @@ export class OrderService {
       4: '已取消',
     };
 
-    if (updateDto.status === 1 || updateDto.status === 2 || updateDto.status === 3) {
+    if (
+      updateDto.status === 1 ||
+      updateDto.status === 2 ||
+      updateDto.status === 3
+    ) {
       const statusText = statusMap[updateDto.status];
       const title = `订单状态更新：${statusText}`;
       const content = `您的订单（${order.orderNo}）服务状态已更新为：${statusText}`;
@@ -131,10 +135,13 @@ export class OrderService {
         title,
         content,
         relatedId: parseInt(order.id, 10),
+        elderlyId: parseInt(order.elderlyId, 10),
       });
 
       // Notify family
-      const familyMembers = await this.usersService.getFamilyMembersByElderlyId(parseInt(order.elderlyId, 10));
+      const familyMembers = await this.usersService.getFamilyMembersByElderlyId(
+        parseInt(order.elderlyId, 10),
+      );
       for (const family of familyMembers) {
         await this.notificationService.create({
           userId: family.id,
@@ -142,6 +149,7 @@ export class OrderService {
           title,
           content,
           relatedId: parseInt(order.id, 10),
+          elderlyId: parseInt(order.elderlyId, 10),
         });
       }
     }

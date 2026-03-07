@@ -1,44 +1,69 @@
 // Trigger TS Server refresh
-import { Controller, Get, Post, Body, Param, Put, Query, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Put,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 
 @ApiTags('Notification')
 @ApiBearerAuth()
 @Controller('notifications')
 export class NotificationController {
-    constructor(private readonly notificationService: NotificationService) { }
+  constructor(private readonly notificationService: NotificationService) {}
 
-    @Get()
-    @ApiOperation({ summary: 'Get current user notifications (paginated)' })
-    @ApiQuery({ name: 'page', required: false, type: Number })
-    @ApiQuery({ name: 'limit', required: false, type: Number })
-    findAll(
-        @Req() req: any,
-        @Query('page') page?: string,
-        @Query('limit') limit?: string,
-    ) {
-        const pageNum = page ? parseInt(page, 10) : 1;
-        const limitNum = limit ? parseInt(limit, 10) : 10;
-        return this.notificationService.findAll(req.user.userId, pageNum, limitNum);
-    }
+  @Get()
+  @ApiOperation({ summary: 'Get current user notifications (paginated)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'isRead', required: false, type: Number, description: '0 for unread, 1 for read' })
+  @ApiQuery({ name: 'elderlyId', required: false, type: Number, description: 'Filter by elderly user ID' })
+  @ApiQuery({ name: 'type', required: false, type: String, description: 'Filter by notification type' })
+  findAll(
+    @Req() req: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('isRead') isRead?: string,
+    @Query('elderlyId') elderlyId?: string,
+    @Query('type') type?: string,
+  ) {
+    const pageNum = page ? parseInt(page, 10) : 1;
+    const limitNum = limit ? parseInt(limit, 10) : 10;
+    const readStatus = isRead !== undefined ? parseInt(isRead, 10) : undefined;
+    const elderlyIdNum = elderlyId ? parseInt(elderlyId, 10) : undefined;
+    return this.notificationService.findAll(req.user.userId, pageNum, limitNum, readStatus, elderlyIdNum, type);
+  }
 
-    @Get('unread-count')
-    @ApiOperation({ summary: 'Get unread notification count for the current user' })
-    getUnreadCount(@Req() req: any) {
-        return this.notificationService.findUnreadCount(req.user.userId);
-    }
+  @Get('unread-count')
+  @ApiOperation({
+    summary: 'Get unread notification count for the current user',
+  })
+  getUnreadCount(@Req() req: any) {
+    return this.notificationService.findUnreadCount(req.user.userId);
+  }
 
-    @Put(':id/read')
-    @ApiOperation({ summary: 'Mark a notification as read' })
-    markAsRead(@Param('id') id: string, @Req() req: any) {
-        return this.notificationService.markAsRead(+id, req.user.userId);
-    }
+  @Put(':id/read')
+  @ApiOperation({ summary: 'Mark a notification as read' })
+  markAsRead(@Param('id') id: string, @Req() req: any) {
+    return this.notificationService.markAsRead(+id, req.user.userId);
+  }
 
-    @Put('read-all')
-    @ApiOperation({ summary: 'Mark all notifications as read for current user' })
-    markAllAsRead(@Req() req: any) {
-        return this.notificationService.markAllAsRead(req.user.userId);
-    }
+  @Put('read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read for current user' })
+  markAllAsRead(@Req() req: any) {
+    return this.notificationService.markAllAsRead(req.user.userId);
+  }
 }

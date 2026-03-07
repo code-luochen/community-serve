@@ -22,20 +22,27 @@ export class AuthService {
     role?: number,
   ): Promise<any> {
     const user = await this.usersService.findOne(username);
-    if (user && (await bcrypt.compare(pass, user.password))) {
-      // Check role if specified
-      if (role && user.role !== role) {
-        throw new UnauthorizedException('Role mismatch');
-      }
-      // Check status
-      if (user.status !== 1) {
-        throw new UnauthorizedException('Account disabled');
-      }
-
-      const { password, ...result } = user;
-      return result;
+    if (!user) {
+      throw new BadRequestException('该账号未注册');
     }
-    return null;
+
+    const isPasswordValid = await bcrypt.compare(pass, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('密码不正确');
+    }
+
+    // Check role if specified
+    if (role && user.role !== role) {
+      throw new BadRequestException('该账号在此身份下无权限登录');
+    }
+
+    // Check status
+    if (user.status !== 1) {
+      throw new BadRequestException('账号已被禁用');
+    }
+
+    const { password, ...result } = user;
+    return result;
   }
 
   async login(user: User) {
@@ -51,6 +58,7 @@ export class AuthService {
         username: user.username,
         role: user.role,
         nickname: user.nickname,
+        avatar: user.avatar,
       },
     };
   }

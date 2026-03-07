@@ -16,6 +16,7 @@ import { HealthRecordModule } from './modules/health-record/health-record.module
 import { EmergencyModule } from './modules/emergency/emergency.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
+import { FamilyBindingModule } from './modules/family-binding/family-binding.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
     EmergencyModule,
     NotificationModule,
     StatisticsModule,
+    FamilyBindingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -64,4 +66,4 @@ import { StatisticsModule } from './modules/statistics/statistics.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

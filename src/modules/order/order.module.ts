@@ -12,4 +12,4 @@ import { Order } from './entities/order.entity';
   providers: [OrderService],
   exports: [OrderService],
 })
-export class OrderModule { }
+export class OrderModule {}
