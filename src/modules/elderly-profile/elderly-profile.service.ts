@@ -46,7 +46,7 @@ export class ElderlyProfileService {
   async findOneByUserId(userId: number): Promise<ElderlyProfile> {
     const profile = await this.profileRepo.findOne({
       where: { userId },
-      relations: ['user'],
+      relations: ['user', 'house', 'house.community'],
     });
 
     if (!profile) {

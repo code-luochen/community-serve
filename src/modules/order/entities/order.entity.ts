@@ -4,8 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('order')
 export class Order {
@@ -21,9 +24,17 @@ export class Order {
   @ApiProperty({ description: '老年人 user_id', type: String })
   elderlyId: string;
 
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'elderly_id' })
+  elderly: User;
+
   @Column({ name: 'merchant_id', type: 'bigint' })
   @ApiProperty({ description: '商家 user_id', type: String })
   merchantId: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'merchant_id' })
+  merchant: User;
 
   @Column({ name: 'service_id', type: 'bigint' })
   @ApiProperty({ description: '服务 ID', type: String })

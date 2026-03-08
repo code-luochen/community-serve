@@ -30,4 +30,20 @@ export class QueryOrderDto {
   @Type(() => Number)
   @IsInt()
   limit?: number;
+
+  @ApiPropertyOptional({ description: '所属小区 ID' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  communityId?: number;
+
+  @ApiPropertyOptional({ description: '配送地址模糊搜索' })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional({ description: '订单编号查询' })
+  @IsOptional()
+  @IsString()
+  orderNo?: string;
 }

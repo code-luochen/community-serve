@@ -68,9 +68,11 @@ export class UsersService {
     }
 
     const [items, total] = await queryBuilder
+      .leftJoinAndSelect('user.community', 'userCommunity')
+      .leftJoinAndSelect('user.house', 'userHouse')
       .leftJoinAndSelect('user.profile', 'profile')
-      .leftJoinAndSelect('profile.house', 'house')
-      .leftJoinAndSelect('house.community', 'community')
+      .leftJoinAndSelect('profile.house', 'profileHouse')
+      .leftJoinAndSelect('profileHouse.community', 'profileCommunity')
       .skip((page - 1) * limit)
       .take(limit)
       .orderBy('user.createdAt', 'DESC')

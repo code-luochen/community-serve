@@ -26,4 +26,10 @@ export class QueryHealthRecordDto {
   @Type(() => Number)
   @IsInt()
   limit?: number = 10;
+
+  @ApiProperty({ description: '所属小区 ID', required: false })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  communityId?: number;
 }

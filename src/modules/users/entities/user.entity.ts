@@ -5,8 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToOne,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ElderlyProfile } from '../../elderly-profile/entities/elderly-profile.entity';
+import { Community } from '../../community/entities/community.entity';
+import { HouseDict } from '../../community/entities/house-dict.entity';
 
 @Entity('users')
 export class User {
@@ -49,6 +53,13 @@ export class User {
   lastLoginAt: Date;
 
   @Column({
+    length: 20,
+    nullable: true,
+    comment: '联系电话',
+  })
+  phone: string;
+
+  @Column({
     nullable: true,
     comment: '头像URL',
   })
@@ -69,6 +80,14 @@ export class User {
     comment: '关联 house_dict.id，精确位置',
   })
   houseId: number | null;
+
+  @ManyToOne(() => Community, { nullable: true })
+  @JoinColumn({ name: 'community_id' })
+  community: Community;
+
+  @ManyToOne(() => HouseDict, { nullable: true })
+  @JoinColumn({ name: 'house_id' })
+  house: HouseDict;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -44,6 +44,16 @@ export class CreateUserDto {
   @IsOptional()
   realName?: string;
 
+  @ApiPropertyOptional({ description: '联系电话' })
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiPropertyOptional({ description: '头像URL' })
+  @IsString()
+  @IsOptional()
+  avatar?: string;
+
   @ApiPropertyOptional({
     description: '所属小区ID（关联 community.id），用于数据隔离',
     example: 1,

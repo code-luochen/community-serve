@@ -50,4 +50,21 @@ export class FamilyBindingController {
   ) {
     return this.bindingService.unbind(user.id, elderlyId);
   }
+
+  @Get('my-family')
+  @Roles(UserRole.ELDERLY)
+  @ApiOperation({ summary: '老人端获取已绑定家属列表' })
+  getMyFamilyList(@CurrentUser() user: { id: number }) {
+    return this.bindingService.getMyFamilyList(user.id);
+  }
+
+  @Delete('family/:familyId')
+  @Roles(UserRole.ELDERLY)
+  @ApiOperation({ summary: '老人端解除与某个家属的绑定' })
+  unbindFamily(
+    @CurrentUser() user: { id: number },
+    @Param('familyId', ParseIntPipe) familyId: number,
+  ) {
+    return this.bindingService.unbind(familyId, user.id);
+  }
 }

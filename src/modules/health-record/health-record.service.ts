@@ -132,9 +132,12 @@ export class HealthRecordService {
 
   // BE-15: 健康数据查询
   async findAll(query: QueryHealthRecordDto): Promise<HealthRecordListResult> {
-    const { elderlyId, isAbnormal, page = 1, limit = 10 } = query;
-    const queryBuilder =
-      this.healthRecordRepository.createQueryBuilder('health_record');
+    const { elderlyId, isAbnormal, page = 1, limit = 10, communityId } = query;
+    const queryBuilder = this.healthRecordRepository
+      .createQueryBuilder('health_record')
+      .leftJoinAndSelect('health_record.elderly', 'elderly')
+      .leftJoinAndSelect('elderly.community', 'community')
+      .leftJoinAndSelect('elderly.house', 'house');
 
     if (elderlyId) {
       queryBuilder.andWhere('health_record.elderlyId = :elderlyId', {
@@ -144,6 +147,11 @@ export class HealthRecordService {
     if (isAbnormal !== undefined) {
       queryBuilder.andWhere('health_record.isAbnormal = :isAbnormal', {
         isAbnormal,
+      });
+    }
+    if (communityId !== undefined) {
+      queryBuilder.andWhere('elderly.communityId = :communityId', {
+        communityId,
       });
     }
 

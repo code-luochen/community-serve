@@ -8,7 +8,12 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -37,6 +42,27 @@ export class ServicesController {
     @Body() createServiceDto: CreateServiceDto,
   ) {
     return this.servicesService.create(user.id, createServiceDto);
+  }
+
+  @Post('upload')
+  @Roles(UserRole.MERCHANT)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: './uploads/services',
+        filename: (req: any, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const ext = extname(file.originalname);
+          cb(null, `${uniqueSuffix}${ext}`);
+        },
+      }),
+    }),
+  )
+  @ApiOperation({ summary: '上传服务图片' })
+  async uploadServiceImage(@UploadedFile() file: any) {
+    const imageUrl = `/uploads/services/${file.filename}`;
+    return { url: imageUrl };
   }
 
   @Get()

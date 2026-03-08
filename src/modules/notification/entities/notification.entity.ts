@@ -4,8 +4,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('notification')
 export class Notification extends BaseEntity {
@@ -36,6 +39,10 @@ export class Notification extends BaseEntity {
   @Column({ name: 'elderly_id', nullable: true })
   @ApiProperty({ description: 'Related elderly user ID (optional, for filtering)' })
   elderlyId: number;
+  
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'elderly_id' })
+  elderly: User;
 
   @Column({ name: 'is_read', default: false })
   @ApiProperty({ description: 'Read status: 0-unread, 1-read' })

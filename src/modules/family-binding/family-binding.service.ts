@@ -111,8 +111,16 @@ export class FamilyBindingService {
 
     // 将状态置为 2（已解绑），作为"哨兵记录"保留在数据库中。
     // 这样 getMyElderlyList 中的自动同步逻辑检测到 existingBinding != null，就不会重新插入绑定，
-    // 彻底阻止了"解绑后自动复活"的问题。
+    //彻底阻止了"解绑后自动复活"的问题。
     binding.status = 2;
     await this.bindingRepository.save(binding);
+  }
+
+  async getMyFamilyList(elderlyId: number) {
+    return this.bindingRepository.find({
+      where: { elderlyId, status: 1 },
+      relations: ['family'],
+      order: { createdAt: 'DESC' },
+    });
   }
 }

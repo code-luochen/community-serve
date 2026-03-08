@@ -62,8 +62,10 @@ async function bootstrap() {
         username: 'family_test2',
         password: 'password123',
         role: 2,
-        nickname: '王小明2',
-        realName: '王小明2',
+        nickname: '王小明',
+        realName: '王小明',
+        phone: '13812345678',
+        avatar: 'https://img.js.design/assets/illustration/63f46f48a97217578205691e/preview.png'
       });
       console.log('家属账号创建成功！ID:', familyUser.id);
     } catch (e) {

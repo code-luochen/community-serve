@@ -20,6 +20,11 @@ export class UpdateUserDto {
   avatar?: string;
 
   @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  phone?: string;
+
+  @ApiProperty({ required: false })
   @IsInt()
   @Type(() => Number)
   @IsOptional()

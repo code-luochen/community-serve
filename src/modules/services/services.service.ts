@@ -10,13 +10,30 @@ import { Service } from './entities/service.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServiceQueryDto } from './dto/service-query.dto';
+import { UsersService } from '../users/users.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class ServicesService {
   constructor(
     @InjectRepository(Service)
     private readonly servicesRepository: Repository<Service>,
+    private readonly usersService: UsersService,
+    private readonly notificationService: NotificationService,
   ) {}
+
+  private async notifyAdmins(title: string, content: string, relatedId?: number) {
+    const admins = await this.usersService.getAdmins();
+    for (const admin of admins) {
+      await this.notificationService.create({
+        userId: admin.id,
+        type: 'service',
+        title,
+        content,
+        relatedId,
+      });
+    }
+  }
 
   async create(
     merchantId: number,
@@ -29,37 +46,63 @@ export class ServicesService {
       status: 0,
       auditStatus: 0,
     });
-    return await this.servicesRepository.save(service);
+    const savedService = await this.servicesRepository.save(service);
+    
+    // Notify admins for new service approval
+    await this.notifyAdmins(
+      '新服务待审核',
+      `商家已发布新服务【${savedService.name}】，请及时审核。`,
+      savedService.id,
+    );
+    
+    return savedService;
   }
 
   async findAll(
     query: ServiceQueryDto,
     customFilters: FindOptionsWhere<Service> = {},
   ): Promise<{ total: number; items: Service[] }> {
-    const { page = 1, limit = 10, name, type, status, auditStatus } = query;
+    const { page = 1, limit = 10, name, type, status, auditStatus, communityId } = query;
     const skip: number = (page - 1) * limit;
 
-    const where: FindOptionsWhere<Service> = { ...customFilters };
+    const queryBuilder = this.servicesRepository
+      .createQueryBuilder('service')
+      .leftJoinAndSelect('service.merchant', 'merchant')
+      .leftJoinAndSelect('merchant.house', 'house')
+      .leftJoinAndSelect('merchant.community', 'community');
+
     if (name) {
-      where.name = Like(`%${name}%`);
+      queryBuilder.andWhere('service.name LIKE :name', { name: `%${name}%` });
     }
     if (type) {
-      where.type = type;
+      queryBuilder.andWhere('service.type = :type', { type });
     }
-    if (status !== undefined && customFilters.status === undefined) {
-      where.status = status;
+    if (status !== undefined) {
+      queryBuilder.andWhere('service.status = :status', { status });
     }
-    if (auditStatus !== undefined && customFilters.auditStatus === undefined) {
-      where.auditStatus = auditStatus;
+    if (auditStatus !== undefined) {
+      queryBuilder.andWhere('service.auditStatus = :auditStatus', { auditStatus });
+    }
+    if (communityId !== undefined) {
+      queryBuilder.andWhere('merchant.communityId = :communityId', { communityId });
     }
 
-    const [items, total] = await this.servicesRepository.findAndCount({
-      where,
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-      relations: ['merchant'],
-    });
+    // Apply custom filters (if any)
+    if (customFilters.merchantId) {
+      queryBuilder.andWhere('service.merchantId = :merchantId', { merchantId: customFilters.merchantId });
+    }
+    if (customFilters.status !== undefined) {
+      queryBuilder.andWhere('service.status = :cStatus', { cStatus: customFilters.status });
+    }
+    if (customFilters.auditStatus !== undefined) {
+      queryBuilder.andWhere('service.auditStatus = :cAuditStatus', { cAuditStatus: customFilters.auditStatus });
+    }
+
+    const [items, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .orderBy('service.createdAt', 'DESC')
+      .getManyAndCount();
 
     return { total, items };
   }
@@ -94,7 +137,18 @@ export class ServicesService {
       service.status = 0; // 强制下架
     }
 
-    return await this.servicesRepository.save(service);
+    const savedService = await this.servicesRepository.save(service);
+    
+    if (needReAudit) {
+      // Notify admins if changes require re-audit
+      await this.notifyAdmins(
+        '服务修改待审核',
+        `商家已修改服务【${savedService.name}】，内容变更已同步，请重新审核。`,
+        savedService.id,
+      );
+    }
+    
+    return savedService;
   }
 
   async updateStatus(
@@ -122,6 +176,18 @@ export class ServicesService {
       // 拒绝审核则自动下架
       service.status = 0;
     }
-    return await this.servicesRepository.save(service);
+    const savedService = await this.servicesRepository.save(service);
+
+    // Notify merchant about audit result
+    const statusText = auditStatus === 1 ? '已通过' : '已拒绝';
+    await this.notificationService.create({
+      userId: Number(savedService.merchantId),
+      type: 'service',
+      title: `服务审核${statusText}`,
+      content: `您的服务【${savedService.name}】审核${statusText}。${auditStatus === 1 ? '您现在可以手动上架该服务。' : '如需继续发布，请修改后重新提交。'}`,
+      relatedId: savedService.id,
+    });
+
+    return savedService;
   }
 }

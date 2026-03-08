@@ -17,27 +17,47 @@ export class NotificationService {
     return this.notificationRepository.save(notification);
   }
 
-  async findAll(userId: number, page: number = 1, limit: number = 10, isRead?: number, elderlyId?: number, type?: string) {
-    const whereCondition: any = { userId };
-    
+  async findAll(
+    userId: number,
+    page: number = 1,
+    limit: number = 10,
+    isRead?: number,
+    elderlyId?: number,
+    type?: string,
+    communityId?: number,
+  ) {
+    const queryBuilder = this.notificationRepository
+      .createQueryBuilder('notification')
+      .leftJoinAndSelect('notification.elderly', 'elderly')
+      .where('notification.userId = :userId', { userId });
+
     if (isRead !== undefined && !Number.isNaN(isRead)) {
-      whereCondition.isRead = isRead === 1;
+      queryBuilder.andWhere('notification.isRead = :isRead', {
+        isRead: isRead === 1,
+      });
     }
 
     if (elderlyId !== undefined && !Number.isNaN(elderlyId)) {
-      whereCondition.elderlyId = elderlyId;
+      queryBuilder.andWhere('notification.elderlyId = :elderlyId', {
+        elderlyId,
+      });
+    }
+
+    if (communityId !== undefined && !Number.isNaN(communityId)) {
+      queryBuilder.andWhere('elderly.communityId = :communityId', {
+        communityId,
+      });
     }
 
     if (type) {
-      whereCondition.type = type;
+      queryBuilder.andWhere('notification.type = :type', { type });
     }
 
-    const [data, total] = await this.notificationRepository.findAndCount({
-      where: whereCondition,
-      order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    const [data, total] = await queryBuilder
+      .orderBy('notification.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
 
     const unreadCount = await this.notificationRepository.countBy({
       userId,

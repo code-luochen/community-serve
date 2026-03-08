@@ -58,7 +58,8 @@ export class OrderService {
     const orderNo = this.generateOrderNo();
 
     // BE-21: 自动读取老人 house_id，生成地址快照
-    let houseSnapshot = '地址未设置';
+    // 初始值优先取手动输入的 address 字段（若有）
+    let houseSnapshot = createOrderDto.address || '地址未设置';
 
     const elderlyIdNum = parseInt(createOrderDto.elderlyId, 10);
     const profile = await this.elderlyProfileRepo.findOneBy({
@@ -79,19 +80,64 @@ export class OrderService {
       }
     }
 
+    // 从 DTO 中提取基础数据，移除 address 以防 TypeORM 尝试写入不存在的列
+    const { address: _, ...orderData } = createOrderDto;
+
     const order = this.orderRepository.create({
-      ...createOrderDto,
+      ...orderData,
       houseSnapshot,
       orderNo,
       status: 0, // 初始化状态：0-待接单
     });
-    return await this.orderRepository.save(order);
+
+    const savedOrder = await this.orderRepository.save(order);
+
+    // BE-18: 发送通知给商家
+    const merchantUserId = parseInt(savedOrder.merchantId, 10);
+    const serviceName = savedOrder.serviceSnapshot?.name || '未知服务';
+    
+    await this.notificationService.create({
+      userId: merchantUserId,
+      type: 'order',
+      title: '新服务预约通知',
+      content: `您有一项新的服务待处理：[${serviceName}]。请尽快接单并完成后续服务，订单号：${savedOrder.orderNo}。`,
+      relatedId: parseInt(savedOrder.id, 10),
+    });
+
+    // BE-18: 发送通知给家属
+    const familyMembers = await this.usersService.getFamilyMembersByElderlyId(elderlyIdNum);
+    const elderlyName = profile?.user?.nickname || '您的家人';
+    for (const family of familyMembers) {
+      await this.notificationService.create({
+        userId: Number(family.id),
+        type: 'order',
+        title: '家人服务预约提醒',
+        content: `${elderlyName} 刚刚预约了服务：[${serviceName}]，订单号：${savedOrder.orderNo}。`,
+        relatedId: parseInt(savedOrder.id, 10),
+      });
+    }
+
+    // BE-18: 发送通知给管理员
+    const admins = await this.usersService.getAdmins();
+    for (const admin of admins) {
+      await this.notificationService.create({
+        userId: Number(admin.id),
+        type: 'order',
+        title: '系统新订单提醒',
+        content: `系统产生新订单 [${serviceName}]，来自老人 [${elderlyName}]，订单号：${savedOrder.orderNo}。`,
+        relatedId: parseInt(savedOrder.id, 10),
+      });
+    }
+
+    return savedOrder;
   }
 
   // BE-11: 订单查询 (多角色/条件合并)
   async findAll(query: QueryOrderDto): Promise<OrderListResult> {
-    const { elderlyId, merchantId, status, page = 1, limit = 10 } = query;
-    const queryBuilder = this.orderRepository.createQueryBuilder('order');
+    const { elderlyId, merchantId, status, page = 1, limit = 10, communityId } = query;
+    const queryBuilder = this.orderRepository.createQueryBuilder('order')
+      .leftJoinAndSelect('order.elderly', 'elderly')
+      .leftJoinAndSelect('order.merchant', 'merchant');
 
     if (elderlyId) {
       queryBuilder.andWhere('order.elderlyId = :elderlyId', { elderlyId });
@@ -101,6 +147,15 @@ export class OrderService {
     }
     if (status !== undefined) {
       queryBuilder.andWhere('order.status = :status', { status });
+    }
+    if (communityId !== undefined) {
+      queryBuilder.andWhere('elderly.communityId = :communityId', { communityId });
+    }
+    if (query.address) {
+      queryBuilder.andWhere('order.houseSnapshot LIKE :address', { address: `%${query.address}%` });
+    }
+    if (query.orderNo) {
+      queryBuilder.andWhere('order.orderNo = :orderNo', { orderNo: query.orderNo });
     }
 
     queryBuilder.orderBy('order.createdAt', 'DESC');

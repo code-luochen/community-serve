@@ -39,4 +39,10 @@ export class ServiceQueryDto {
   @Type(() => Number)
   @IsInt()
   auditStatus?: number;
+
+  @ApiPropertyOptional({ description: '所属小区ID' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  communityId?: number;
 }

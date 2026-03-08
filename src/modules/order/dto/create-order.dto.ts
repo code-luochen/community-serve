@@ -49,4 +49,9 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   remark?: string;
+
+  @ApiPropertyOptional({ description: '详细地址（手动输入，若无 houseId 则使用此字段）' })
+  @IsString()
+  @IsOptional()
+  address?: string;
 }

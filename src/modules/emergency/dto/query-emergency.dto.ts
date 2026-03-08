@@ -24,9 +24,15 @@ export class QueryEmergencyDto {
   @IsNumber()
   page?: number;
 
-  @ApiProperty({ required: false, description: '每页条数', default: 10 })
+  @ApiProperty({ required: false, description: '根据每页条数', default: 10 })
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
   limit?: number;
+
+  @ApiProperty({ required: false, description: '所属小区ID' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  communityId?: number;
 }

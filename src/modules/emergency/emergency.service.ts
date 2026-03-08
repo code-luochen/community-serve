@@ -107,15 +107,23 @@ export class EmergencyService {
 
   // 获取求助列表 (家属和管理员查询)
   async findAll(query: QueryEmergencyDto): Promise<EmergencyLogListResult> {
-    const { elderlyId, status, page = 1, limit = 10 } = query;
+    const { elderlyId, status, page = 1, limit = 10, communityId } = query;
     const queryBuilder = this.emergencyLogRepository
       .createQueryBuilder('emergency_log')
       .leftJoinAndSelect('emergency_log.elderly', 'elderly')
+      .leftJoinAndSelect('elderly.house', 'house')
+      .leftJoinAndSelect('elderly.community', 'community')
       .leftJoinAndSelect('emergency_log.handler', 'handler');
 
     if (elderlyId !== undefined) {
       queryBuilder.andWhere('emergency_log.elderlyId = :elderlyId', {
         elderlyId,
+      });
+    }
+
+    if (communityId !== undefined) {
+      queryBuilder.andWhere('elderly.communityId = :communityId', {
+        communityId,
       });
     }
 

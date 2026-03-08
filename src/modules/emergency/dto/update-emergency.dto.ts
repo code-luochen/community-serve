@@ -5,10 +5,12 @@ import {
   IsNumber,
   IsIn,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateEmergencyDto {
   @ApiProperty({ description: '状态：1-处理中 2-已处理', required: true })
+  @Type(() => Number)
   @IsNumber()
   @IsIn([1, 2])
   status: number;
@@ -21,6 +23,7 @@ export class UpdateEmergencyDto {
 
   @ApiProperty({ description: '指定处理人ID（仅管理员可用）', required: false })
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   handlerId?: number;
 }
