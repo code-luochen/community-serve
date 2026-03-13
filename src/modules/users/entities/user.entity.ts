@@ -7,10 +7,12 @@ import {
   OneToOne,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { ElderlyProfile } from '../../elderly-profile/entities/elderly-profile.entity';
 import { Community } from '../../community/entities/community.entity';
 import { HouseDict } from '../../community/entities/house-dict.entity';
+import { FamilyBinding } from '../../family-binding/entities/family-binding.entity';
 
 @Entity('users')
 export class User {
@@ -97,4 +99,10 @@ export class User {
 
   @OneToOne(() => ElderlyProfile, (profile) => profile.user)
   profile: ElderlyProfile;
+
+  @OneToMany(() => FamilyBinding, (binding) => binding.family)
+  familyBindings: FamilyBinding[];
+
+  @OneToMany(() => FamilyBinding, (binding) => binding.elderly)
+  elderlyBindings: FamilyBinding[];
 }

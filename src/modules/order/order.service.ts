@@ -32,7 +32,7 @@ export class OrderService {
     private readonly notificationService: NotificationService,
     private readonly usersService: UsersService,
     private readonly communityService: CommunityService,
-  ) {}
+  ) { }
 
   /**
    * 生成业务订单号：SN + yyyyMMddHHmmssSSS + 3位随机数
@@ -95,7 +95,7 @@ export class OrderService {
     // BE-18: 发送通知给商家
     const merchantUserId = parseInt(savedOrder.merchantId, 10);
     const serviceName = savedOrder.serviceSnapshot?.name || '未知服务';
-    
+
     await this.notificationService.create({
       userId: merchantUserId,
       type: 'order',

@@ -18,7 +18,7 @@ import { Order } from './entities/order.entity';
 @ApiTags('订单管理 (Order)')
 @Controller('order')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
   @Post()
   @ApiOperation({ summary: 'BE-09 创建订单' })
