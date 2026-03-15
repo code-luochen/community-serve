@@ -34,6 +34,7 @@ export class UsersService {
         'status',
         'nickname',
         'realName',
+        'phone',
         'lastLoginAt',
         'avatar',
         'createdAt',

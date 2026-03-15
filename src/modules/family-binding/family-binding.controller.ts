@@ -22,7 +22,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('family-binding')
 export class FamilyBindingController {
-  constructor(private readonly bindingService: FamilyBindingService) {}
+  constructor(private readonly bindingService: FamilyBindingService) { }
 
   @Post()
   @Roles(UserRole.FAMILY)

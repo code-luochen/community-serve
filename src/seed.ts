@@ -30,6 +30,7 @@ async function bootstrap() {
         role: 1,
         nickname: '王大爷2',
         realName: '王建国2',
+        phone: '13912345678',
       });
       console.log('老人账号创建成功！ID:', elderlyUser.id);
     } catch (e) {
@@ -97,6 +98,7 @@ async function bootstrap() {
         role: 3,
         nickname: '社区健康服务站2',
         realName: '张站长2',
+        phone: '13712345678',
       });
       console.log('商户账号创建成功！ID:', merchantUser.id);
     } catch (e) {
@@ -186,6 +188,7 @@ async function bootstrap() {
         role: 4,
         nickname: '超级管理员',
         realName: '系统管理员',
+        phone: '13312345678',
       });
       console.log('管理员账号创建成功！ID:', adminUser.id);
     } catch (e) {

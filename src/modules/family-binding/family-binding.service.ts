@@ -16,7 +16,7 @@ export class FamilyBindingService {
     private readonly bindingRepository: Repository<FamilyBinding>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async bindElderly(
     familyId: number,

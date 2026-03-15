@@ -12,12 +12,14 @@ async function bootstrap() {
             password: 'Elderly@2026',
             nickname: '张爷爷',
             role: 1, // Elderly
+            phone: '13911112222',
         },
         {
             username: 'admin_xiaoqu01',
             password: 'Admin@2026',
             nickname: '小区管理员',
             role: 4, // Admin
+            phone: '13311112222',
         }
     ];
 

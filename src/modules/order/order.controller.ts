@@ -3,9 +3,10 @@ import {
   Get,
   Post,
   Body,
-  Patch,
+  Put,
   Param,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { OrderService } from './order.service';
@@ -38,7 +39,7 @@ export class OrderController {
     return this.orderService.findOne(id);
   }
 
-  @Patch(':id/status')
+  @Put(':id/status')
   @ApiOperation({ summary: 'BE-10 更新订单状态 (流转)' })
   updateStatus(
     @Param('id') id: string,
@@ -47,9 +48,29 @@ export class OrderController {
     return this.orderService.updateStatus(id, updateOrderStatusDto);
   }
 
-  @Patch(':id/evaluate')
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'BE-10 更新订单状态 (流转)' })
+  updateStatusPatch(
+    @Param('id') id: string,
+    @Body() updateOrderStatusDto: UpdateOrderStatusDto,
+  ): Promise<Order> {
+    return this.orderService.updateStatus(id, updateOrderStatusDto);
+  }
+
+  @Put(':id/evaluate')
   @ApiOperation({ summary: 'BE-12 订单评价' })
   evaluate(
+    @Param('id') id: string,
+    @Body() evaluateOrderDto: EvaluateOrderDto,
+  ): Promise<Order> {
+    return this.orderService.evaluate(id, evaluateOrderDto);
+  }
+
+
+  @Patch(':id/evaluate')
+  @ApiOperation({ summary: 'BE-12 订单评价' })
+  evaluatePatch(
     @Param('id') id: string,
     @Body() evaluateOrderDto: EvaluateOrderDto,
   ): Promise<Order> {

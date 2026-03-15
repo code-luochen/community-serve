@@ -199,8 +199,9 @@ export class OrderService {
     const statusMap: Record<number, string> = {
       1: '已接单',
       2: '配送中',
-      3: '已完成',
-      4: '已取消',
+      3: '待评价',
+      4: '已完成',
+      5: '已取消',
     };
 
     if (
