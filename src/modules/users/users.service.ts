@@ -100,7 +100,9 @@ export class UsersService {
     }
 
     const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(createUserDto.password, salt);
+    // Default password to 123456
+    const finalPassword = createUserDto.password || '123456';
+    const hashedPassword = await bcrypt.hash(finalPassword, salt);
 
     const user = this.usersRepository.create({
       ...createUserDto,

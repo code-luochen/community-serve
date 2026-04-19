@@ -23,11 +23,11 @@ export class CreateUserDto {
   })
   username: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional({ description: '初始密码，不传默认为123456' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @Length(6, 16) // Task breakdown: 6-16
-  password: string;
+  password?: string;
 
   @ApiProperty({ enum: UserRole })
   @IsNumber()

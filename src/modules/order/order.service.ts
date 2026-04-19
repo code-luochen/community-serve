@@ -261,4 +261,11 @@ export class OrderService {
 
     return await this.orderRepository.save(order);
   }
+
+  async remove(id: string): Promise<void> {
+    const result = await this.orderRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Order with ID ${id} not found`);
+    }
+  }
 }

@@ -7,6 +7,7 @@ import {
   Param,
   Query,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { OrderService } from './order.service';
@@ -75,5 +76,11 @@ export class OrderController {
     @Body() evaluateOrderDto: EvaluateOrderDto,
   ): Promise<Order> {
     return this.orderService.evaluate(id, evaluateOrderDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '删除订单' })
+  remove(@Param('id') id: string): Promise<void> {
+    return this.orderService.remove(id);
   }
 }
