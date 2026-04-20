@@ -8,6 +8,8 @@ import { Repository } from 'typeorm';
 import { FamilyBinding } from './entities/family-binding.entity';
 import { CreateBindingDto } from './dto/create-binding.dto';
 import { User } from '../users/entities/user.entity';
+import { ElderlyProfile } from '../elderly-profile/entities/elderly-profile.entity';
+import { UpdateElderlyInfoDto } from './dto/update-elderly-info.dto';
 
 @Injectable()
 export class FamilyBindingService {
@@ -16,6 +18,8 @@ export class FamilyBindingService {
     private readonly bindingRepository: Repository<FamilyBinding>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(ElderlyProfile)
+    private readonly profileRepository: Repository<ElderlyProfile>,
   ) { }
 
   async bindElderly(
@@ -122,5 +126,47 @@ export class FamilyBindingService {
       relations: ['family'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async updateElderlyInfo(familyId: number, elderlyId: number, dto: UpdateElderlyInfoDto) {
+    // Check if the binding exists and is active
+    const binding = await this.bindingRepository.findOne({
+      where: { familyId, elderlyId, status: 1 },
+    });
+
+    if (!binding) {
+      throw new ConflictException('当前未绑定该老人，无法修改信息');
+    }
+
+    const elderly = await this.userRepository.findOne({
+      where: { id: elderlyId },
+    });
+
+    if (!elderly) {
+      throw new NotFoundException('找不到对应账号的老人');
+    }
+
+    // Update basic user information
+    if (dto.realName !== undefined) elderly.realName = dto.realName;
+    if (dto.phone !== undefined) elderly.phone = dto.phone;
+
+    await this.userRepository.save(elderly);
+
+    // Update elderly profile
+    let profile = await this.profileRepository.findOne({
+      where: { userId: elderlyId },
+    });
+
+    if (!profile) {
+      profile = this.profileRepository.create({
+        userId: elderlyId,
+      });
+    }
+
+    if (dto.age !== undefined) profile.age = dto.age;
+    if (dto.gender !== undefined) profile.gender = dto.gender;
+    if (dto.houseId !== undefined) profile.houseId = dto.houseId;
+
+    await this.profileRepository.save(profile);
   }
 }

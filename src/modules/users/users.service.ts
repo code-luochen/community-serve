@@ -167,4 +167,12 @@ export class UsersService {
   async getAdmins(): Promise<User[]> {
     return this.usersRepository.find({ where: { role: 4 } });
   }
+
+  async findAllByCommunity(communityId: number): Promise<User[]> {
+    return this.usersRepository.find({ where: { communityId, status: 1 } });
+  }
+
+  async findAllActiveUsers(): Promise<User[]> {
+    return this.usersRepository.find({ where: { status: 1 } });
+  }
 }

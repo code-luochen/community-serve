@@ -4,9 +4,10 @@ import { FamilyBinding } from './entities/family-binding.entity';
 import { FamilyBindingController } from './family-binding.controller';
 import { FamilyBindingService } from './family-binding.service';
 import { User } from '../users/entities/user.entity';
+import { ElderlyProfile } from '../elderly-profile/entities/elderly-profile.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([FamilyBinding, User])],
+  imports: [TypeOrmModule.forFeature([FamilyBinding, User, ElderlyProfile])],
   controllers: [FamilyBindingController],
   providers: [FamilyBindingService],
   exports: [FamilyBindingService],

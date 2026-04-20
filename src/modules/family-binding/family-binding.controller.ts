@@ -7,10 +7,12 @@ import {
   Param,
   ParseIntPipe,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { FamilyBindingService } from './family-binding.service';
 import { CreateBindingDto } from './dto/create-binding.dto';
+import { UpdateElderlyInfoDto } from './dto/update-elderly-info.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../auth/dto/login.dto';
@@ -66,5 +68,16 @@ export class FamilyBindingController {
     @Param('familyId', ParseIntPipe) familyId: number,
   ) {
     return this.bindingService.unbind(familyId, user.id);
+  }
+
+  @Put('elderly/:elderlyId/info')
+  @Roles(UserRole.FAMILY)
+  @ApiOperation({ summary: '家属更新绑定的老人信息' })
+  updateElderlyInfo(
+    @CurrentUser() user: { id: number },
+    @Param('elderlyId', ParseIntPipe) elderlyId: number,
+    @Body() dto: UpdateElderlyInfoDto,
+  ) {
+    return this.bindingService.updateElderlyInfo(user.id, elderlyId, dto);
   }
 }

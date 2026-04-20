@@ -100,4 +100,8 @@ export class NotificationService {
       { isRead: true },
     );
   }
+
+  async removeByRelated(type: string, relatedId: number): Promise<void> {
+    await this.notificationRepository.delete({ type, relatedId });
+  }
 }

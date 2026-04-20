@@ -18,6 +18,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { FamilyBindingModule } from './modules/family-binding/family-binding.module';
 import { CommunityModule } from './modules/community/community.module';
+import { AnnouncementModule } from './modules/announcement/announcement.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { CommunityModule } from './modules/community/community.module';
     StatisticsModule,
     FamilyBindingModule,
     CommunityModule,
+    AnnouncementModule,
   ],
   controllers: [AppController],
   providers: [
