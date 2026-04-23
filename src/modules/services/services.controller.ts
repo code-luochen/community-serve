@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Patch,
+  Delete,
   Param,
   Query,
   UseGuards,
@@ -121,5 +122,15 @@ export class ServicesController {
   @ApiOperation({ summary: '管理员审核服务' })
   audit(@Param('id', ParseIntPipe) id: number, @Body() dto: AuditServiceDto) {
     return this.servicesService.audit(id, dto.auditStatus);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.MERCHANT)
+  @ApiOperation({ summary: '商家删除服务（软删除）' })
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.servicesService.remove(id, user.id);
   }
 }

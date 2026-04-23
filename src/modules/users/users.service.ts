@@ -175,4 +175,8 @@ export class UsersService {
   async findAllActiveUsers(): Promise<User[]> {
     return this.usersRepository.find({ where: { status: 1 } });
   }
+
+  async remove(id: number): Promise<any> {
+    return this.usersRepository.softDelete(id);
+  }
 }

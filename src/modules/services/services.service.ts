@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
 import { Service } from './entities/service.entity';
+import { Order } from '../order/entities/order.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServiceQueryDto } from './dto/service-query.dto';
@@ -18,6 +19,8 @@ export class ServicesService {
   constructor(
     @InjectRepository(Service)
     private readonly servicesRepository: Repository<Service>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
     private readonly usersService: UsersService,
     private readonly notificationService: NotificationService,
   ) {}
@@ -189,5 +192,20 @@ export class ServicesService {
     });
 
     return savedService;
+  }
+
+  async remove(id: number, merchantId: number): Promise<void> {
+    const service = await this.findOne(id);
+    if (Number(service.merchantId) !== Number(merchantId)) {
+      throw new ForbiddenException('只能删除自己的服务');
+    }
+    // 检查是否有订单引用
+    const orderCount = await this.orderRepository.count({
+      where: { serviceId: id.toString() },
+    });
+    if (orderCount > 0) {
+      throw new BadRequestException(`该服务已被 ${orderCount} 个订单引用，无法删除`);
+    }
+    await this.servicesRepository.softDelete(id);
   }
 }

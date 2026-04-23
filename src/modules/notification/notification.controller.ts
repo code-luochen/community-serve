@@ -66,16 +66,16 @@ export class NotificationController {
     return this.notificationService.findUnreadCount(req.user.userId);
   }
 
-  @Patch(':id/read')
   @Put(':id/read')
-  @ApiOperation({ summary: 'Mark a notification as read (Supports PATCH/PUT for compatibility)' })
+  @Patch(':id/read')
+  @ApiOperation({ summary: 'Mark a notification as read' })
   markAsRead(@Param('id') id: string, @Req() req: any) {
     return this.notificationService.markAsRead(+id, req.user.userId);
   }
 
-  @Patch('read-all')
   @Put('read-all')
-  @ApiOperation({ summary: 'Mark all notifications as read for current user (Supports PATCH/PUT)' })
+  @Patch('read-all')
+  @ApiOperation({ summary: 'Mark all notifications as read' })
   markAllAsRead(@Req() req: any) {
     return this.notificationService.markAllAsRead(req.user.userId);
   }

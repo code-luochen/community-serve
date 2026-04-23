@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
@@ -83,4 +84,8 @@ export class Order {
   @UpdateDateColumn({ name: 'updated_at' })
   @ApiProperty({ description: '更新时间' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  @ApiProperty({ description: '删除时间（软删除）' })
+  deletedAt: Date;
 }

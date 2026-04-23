@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Query,
   Patch,
+  Delete,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
@@ -122,5 +123,12 @@ export class UsersController {
   async resetPassword(@Param('id', ParseIntPipe) id: number) {
     await this.usersService.resetPassword(id, '123456');
     return { message: 'Password reset to 123456' };
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Delete user (soft delete, Admin only)' })
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.remove(id);
   }
 }
