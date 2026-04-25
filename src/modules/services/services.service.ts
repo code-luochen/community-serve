@@ -229,7 +229,10 @@ export class ServicesService {
   }
 
   async restore(id: number, merchantId: number): Promise<Service> {
-    const service = await this.findOne(id);
+    const service = await this.findOneByIdWithDeleted(id);
+    if (!service) {
+      throw new NotFoundException(`服务 #${id} 不存在`);
+    }
     if (Number(service.merchantId) !== Number(merchantId)) {
       throw new ForbiddenException('只能恢复自己的服务');
     }
