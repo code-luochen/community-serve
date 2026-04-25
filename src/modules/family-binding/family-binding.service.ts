@@ -96,12 +96,18 @@ export class FamilyBindingService {
       }
     }
 
-    // 只返回 status=1 的有效绑定
-    return this.bindingRepository.find({
+    // 查询绑定列表时包含软删除的老人（elderly.deletedAt 不为 null）
+    const bindings = await this.bindingRepository.find({
       where: { familyId, status: 1 },
       relations: ['elderly', 'elderly.profile'],
       order: { createdAt: 'DESC' },
     });
+
+    // 标记老人是否已被删除（软删除）
+    return bindings.map(binding => ({
+      ...binding,
+      isElderlyDeleted: binding.elderly?.deletedAt ? true : false,
+    }));
   }
 
   async unbind(familyId: number, elderlyId: number): Promise<void> {
