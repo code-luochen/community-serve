@@ -90,6 +90,13 @@ export class UsersController {
     return this.usersService.findAll(query, user.role);
   }
 
+  @Get('deleted')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '管理员获取所有已删除用户列表' })
+  findAllDeleted(@Query() query: UserQueryDto) {
+    return this.usersService.findAllDeleted(query);
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Get user by ID (Admin only)' })
@@ -130,5 +137,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete user (soft delete, Admin only)' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);
+  }
+
+  @Delete(':id/permanent')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: '永久删除用户 (Admin only)' })
+  permanentDelete(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.permanentDelete(id);
   }
 }

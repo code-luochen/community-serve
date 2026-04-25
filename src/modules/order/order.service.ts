@@ -2,10 +2,12 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
+import { Service } from '../services/entities/service.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { EvaluateOrderDto } from './dto/evaluate-order.dto';
@@ -29,6 +31,8 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(ElderlyProfile)
     private readonly elderlyProfileRepo: Repository<ElderlyProfile>,
+    @InjectRepository(Service)
+    private readonly serviceRepository: Repository<Service>,
     private readonly notificationService: NotificationService,
     private readonly usersService: UsersService,
     private readonly communityService: CommunityService,
@@ -163,8 +167,29 @@ export class OrderService {
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
+    // 检查每个订单对应的服务是否已删除（软删除或永久删除）
+    const serviceIds = [...new Set(items.map(item => Number(item.serviceId)).filter(Boolean))];
+    const deletedServiceIds = new Set<number>();
+
+    if (serviceIds.length > 0) {
+      // 查询被软删除的服务
+      const deletedServices = await this.serviceRepository
+        .createQueryBuilder('service')
+        .where('service.id IN (:...serviceIds)', { serviceIds })
+        .andWhere('service.deletedAt IS NOT NULL')
+        .getMany();
+
+      deletedServices.forEach(s => deletedServiceIds.add(Number(s.id)));
+    }
+
+    // 标记服务已删除的订单
+    const resultItems = items.map(item => ({
+      ...item,
+      isServiceDeleted: deletedServiceIds.has(Number(item.serviceId)),
+    }));
+
     return {
-      items,
+      items: resultItems,
       total,
       page,
       limit,
@@ -264,5 +289,112 @@ export class OrderService {
 
   async remove(id: string): Promise<any> {
     return this.orderRepository.softDelete(id);
+  }
+
+  async findDeleted(query: QueryOrderDto): Promise<{ total: number; items: Order[]; page: number; limit: number }> {
+    const { page = 1, limit = 10, merchantId } = query;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.elderly', 'elderly')
+      .leftJoinAndSelect('order.merchant', 'merchant')
+      .withDeleted()
+      .where('order.deletedAt IS NOT NULL');
+
+    if (merchantId) {
+      queryBuilder.andWhere('order.merchantId = :merchantId', { merchantId });
+    }
+
+    queryBuilder.orderBy('order.deletedAt', 'DESC');
+    queryBuilder.skip(skip).take(limit);
+
+    const [items, total] = await queryBuilder.getManyAndCount();
+
+    // 检查每个订单对应的服务是否已删除
+    const serviceIds = [...new Set(items.map(item => Number(item.serviceId)).filter(Boolean))];
+    const deletedServiceIds = new Set<number>();
+
+    if (serviceIds.length > 0) {
+      const deletedServices = await this.serviceRepository
+        .createQueryBuilder('service')
+        .where('service.id IN (:...serviceIds)', { serviceIds })
+        .andWhere('service.deletedAt IS NOT NULL')
+        .getMany();
+
+      deletedServices.forEach(s => deletedServiceIds.add(Number(s.id)));
+    }
+
+    const resultItems = items.map(item => ({
+      ...item,
+      isServiceDeleted: deletedServiceIds.has(Number(item.serviceId)),
+    }));
+
+    return { total, items: resultItems, page, limit };
+  }
+
+  async findAllDeleted(query: QueryOrderDto): Promise<{ total: number; items: Order[]; page: number; limit: number }> {
+    const { page = 1, limit = 10, communityId } = query;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.elderly', 'elderly')
+      .leftJoinAndSelect('order.merchant', 'merchant')
+      .withDeleted()
+      .where('order.deletedAt IS NOT NULL');
+
+    if (communityId) {
+      queryBuilder.andWhere('elderly.communityId = :communityId', { communityId });
+    }
+
+    queryBuilder.orderBy('order.deletedAt', 'DESC');
+    queryBuilder.skip(skip).take(limit);
+
+    const [items, total] = await queryBuilder.getManyAndCount();
+
+    // 检查每个订单对应的服务是否已删除
+    const serviceIds = [...new Set(items.map(item => Number(item.serviceId)).filter(Boolean))];
+    const deletedServiceIds = new Set<number>();
+
+    if (serviceIds.length > 0) {
+      const deletedServices = await this.serviceRepository
+        .createQueryBuilder('service')
+        .where('service.id IN (:...serviceIds)', { serviceIds })
+        .andWhere('service.deletedAt IS NOT NULL')
+        .getMany();
+
+      deletedServices.forEach(s => deletedServiceIds.add(Number(s.id)));
+    }
+
+    const resultItems = items.map(item => ({
+      ...item,
+      isServiceDeleted: deletedServiceIds.has(Number(item.serviceId)),
+    }));
+
+    return { total, items: resultItems, page, limit };
+  }
+
+  async restore(id: string, merchantId: number): Promise<Order> {
+    const order = await this.orderRepository.findOne({ where: { id }, withDeleted: true });
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} not found`);
+    }
+    if (Number(order.merchantId) !== merchantId) {
+      throw new ForbiddenException('只能恢复自己的订单');
+    }
+    await this.orderRepository.restore(id);
+    return this.findOne(id);
+  }
+
+  async permanentDelete(id: string, merchantId: number): Promise<void> {
+    const order = await this.orderRepository.findOne({ where: { id }, withDeleted: true });
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} not found`);
+    }
+    if (Number(order.merchantId) !== merchantId) {
+      throw new ForbiddenException('只能删除自己的订单');
+    }
+    await this.orderRepository.delete(id);
   }
 }

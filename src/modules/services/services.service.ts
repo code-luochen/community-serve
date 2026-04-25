@@ -208,4 +208,50 @@ export class ServicesService {
     }
     await this.servicesRepository.softDelete(id);
   }
+
+  async findAllDeleted(merchantId: number, query: ServiceQueryDto): Promise<{ total: number; items: Service[] }> {
+    const { page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.servicesRepository
+      .createQueryBuilder('service')
+      .withDeleted()
+      .where('service.merchantId = :merchantId', { merchantId })
+      .andWhere('service.deletedAt IS NOT NULL');
+
+    const [items, total] = await queryBuilder
+      .skip(skip)
+      .take(limit)
+      .orderBy('service.deletedAt', 'DESC')
+      .getManyAndCount();
+
+    return { total, items };
+  }
+
+  async restore(id: number, merchantId: number): Promise<Service> {
+    const service = await this.findOne(id);
+    if (Number(service.merchantId) !== Number(merchantId)) {
+      throw new ForbiddenException('只能恢复自己的服务');
+    }
+    await this.servicesRepository.restore(id);
+    return this.findOne(id);
+  }
+
+  async permanentDelete(id: number, merchantId: number): Promise<void> {
+    const service = await this.findOneByIdWithDeleted(id);
+    if (!service) {
+      throw new NotFoundException(`服务 #${id} 不存在`);
+    }
+    if (Number(service.merchantId) !== Number(merchantId)) {
+      throw new ForbiddenException('只能删除自己的服务');
+    }
+    await this.servicesRepository.delete(id);
+  }
+
+  private async findOneByIdWithDeleted(id: number): Promise<Service | null> {
+    return this.servicesRepository.findOne({
+      where: { id },
+      withDeleted: true,
+    });
+  }
 }

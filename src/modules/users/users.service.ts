@@ -179,4 +179,33 @@ export class UsersService {
   async remove(id: number): Promise<any> {
     return this.usersRepository.softDelete(id);
   }
+
+  async findAllDeleted(query: UserQueryDto): Promise<{ total: number; items: User[]; page: number; limit: number }> {
+    const { page = 1, limit = 10, role } = query;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.usersRepository
+      .createQueryBuilder('user')
+      .withDeleted()
+      .where('user.deletedAt IS NOT NULL');
+
+    if (role !== undefined) {
+      queryBuilder.andWhere('user.role = :role', { role });
+    }
+
+    queryBuilder.orderBy('user.deletedAt', 'DESC');
+    queryBuilder.skip(skip).take(limit);
+
+    const [items, total] = await queryBuilder.getManyAndCount();
+
+    return { total, items, page, limit };
+  }
+
+  async permanentDelete(id: number): Promise<void> {
+    const user = await this.usersRepository.findOne({ where: { id }, withDeleted: true });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    await this.usersRepository.delete(id);
+  }
 }

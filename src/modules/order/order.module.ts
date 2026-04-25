@@ -7,10 +7,11 @@ import { OrderController } from './order.controller';
 import { Order } from './entities/order.entity';
 import { CommunityModule } from '../community/community.module';
 import { ElderlyProfile } from '../elderly-profile/entities/elderly-profile.entity';
+import { Service } from '../services/entities/service.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, ElderlyProfile]),
+    TypeOrmModule.forFeature([Order, ElderlyProfile, Service]),
     NotificationModule,
     UsersModule,
     CommunityModule,

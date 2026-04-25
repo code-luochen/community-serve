@@ -89,6 +89,16 @@ export class ServicesController {
     return this.servicesService.findAll(query, {});
   }
 
+  @Get('deleted')
+  @Roles(UserRole.MERCHANT)
+  @ApiOperation({ summary: '获取商家已删除的服务列表' })
+  findAllDeleted(
+    @CurrentUser() user: { id: number },
+    @Query() query: ServiceQueryDto,
+  ) {
+    return this.servicesService.findAllDeleted(user.id, query);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '获取服务详情' })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -132,5 +142,25 @@ export class ServicesController {
     @CurrentUser() user: { id: number },
   ) {
     return this.servicesService.remove(id, user.id);
+  }
+
+  @Post(':id/restore')
+  @Roles(UserRole.MERCHANT)
+  @ApiOperation({ summary: '恢复已删除的服务' })
+  restore(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.servicesService.restore(id, user.id);
+  }
+
+  @Delete(':id/permanent')
+  @Roles(UserRole.MERCHANT)
+  @ApiOperation({ summary: '永久删除服务' })
+  permanentDelete(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: { id: number },
+  ) {
+    return this.servicesService.permanentDelete(id, user.id);
   }
 }
